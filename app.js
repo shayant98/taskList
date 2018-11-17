@@ -11,6 +11,8 @@ loadEventlisteners();
 
 //Load all event listeners
 function loadEventlisteners() {
+  //DOM Load Event
+  document.addEventListener("DOMContentLoaded", getTasks);
   //add task event
   form.addEventListener("submit", addTask);
   //remove task event
@@ -21,6 +23,36 @@ function loadEventlisteners() {
   filter.addEventListener("keyup", filterTasks);
 }
 
+// get tasks from LS
+function getTasks() {
+  let tasks;
+  if (localStorage.getItem("tasks") === null) {
+    tasks = [];
+  } else {
+    tasks = JSON.parse(localStorage.getItem("tasks"));
+  }
+
+  tasks.forEach(task => {
+    //create LI element
+    const li = document.createElement("li");
+    //add class
+    li.className = "collection-item";
+    //create text node and append to li
+    li.appendChild(document.createTextNode(task));
+    //Create new Link Element
+    const link = document.createElement("a");
+    //add class
+    link.className = "delete-item secondary-content";
+    //Icon Html
+    link.innerHTML = "<i class='far fa-trash-alt'></i>";
+    //append link to LI
+    li.appendChild(link);
+    //append LI to UL
+    taskList.appendChild(li);
+  });
+}
+
+//insert tasks
 function addTask(e) {
   if (taskInput.value == "") {
     alert("Add a task");
@@ -44,9 +76,25 @@ function addTask(e) {
   //append LI to UL
   taskList.appendChild(li);
 
+  //store in ls
+  storeTaskInLocalStorage(taskInput.value);
+
   //clear Input
   taskInput.value = "";
   e.preventDefault();
+}
+
+//store in ls
+function storeTaskInLocalStorage(task) {
+  let tasks;
+  if (localStorage.getItem("tasks") === null) {
+    tasks = [];
+  } else {
+    tasks = JSON.parse(localStorage.getItem("tasks"));
+  }
+  tasks.push(task);
+
+  localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
 //remove task
@@ -54,8 +102,26 @@ function removeTask(e) {
   if (e.target.parentElement.classList.contains("delete-item")) {
     if (confirm("are you sure!")) {
       e.target.parentElement.parentElement.remove();
+      // remove from ls
+      removeTaskFromLocalStorage(e.target.parentElement.parentElement);
     }
   }
+}
+
+function removeTaskFromLocalStorage(taskItem) {
+  let tasks;
+  if (localStorage.getItem("tasks") === null) {
+    tasks = [];
+  } else {
+    tasks = JSON.parse(localStorage.getItem("tasks"));
+  }
+
+  tasks.forEach((task, index) => {
+    if (taskItem.textContent === task) {
+      tasks.splice(index, 1);
+    }
+  });
+  localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
 //clear tasks
@@ -66,6 +132,13 @@ function clearTasks() {
   while (taskList.firstChild) {
     taskList.removeChild(taskList.firstChild);
   }
+
+  clearFromLocalStorage();
+}
+
+//clear tasks from LS
+function clearFromLocalStorage() {
+  localStorage.clear();
 }
 
 function filterTasks(e) {
